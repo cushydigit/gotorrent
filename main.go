@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"strings"
 	"syscall"
 	"time"
 
@@ -61,18 +62,28 @@ func main() {
 	ticker := time.NewTicker(1 * time.Second)
 	defer ticker.Stop()
 
+	tSize := 40
+
 	for {
 		select {
 		case <-ticker.C:
-			// Print download progress
-			progress := float64(torrent.BytesCompleted()) / float64(torrent.Info().TotalLength()) * 100
-			fmt.Printf("Progress: %.2f%%\n", progress)
+			completed := torrent.BytesCompleted()
+			total := torrent.Info().TotalLength()
 
-			// Check if download is complete
-			if torrent.BytesCompleted() == torrent.Info().TotalLength() {
-				fmt.Println("Download completed!")
+			// Print download progress
+			progress := float64(completed) / float64(total) * 100
+
+			// Draw progress bar
+			filled := int(progress / 100 * float64(tSize))
+			bar := fmt.Sprintf("%s%s", strings.Repeat("█", filled), strings.Repeat("░", tSize-filled))
+			fmt.Printf("\r%s %.2f%%", bar, progress)
+			os.Stdout.Sync()
+
+			if completed == total {
+				fmt.Printf("\nDownload completed!\n")
 				return
 			}
+
 		case <-torrent.Closed():
 			fmt.Println("Torrent closed")
 			return
