@@ -30,6 +30,7 @@ func main() {
 	// Create a new torrent client
 	clientConfig := torrent.NewDefaultClientConfig()
 	clientConfig.DataDir = downloadDir
+	clientConfig.SetListenAddr(":0")
 	client, err := torrent.NewClient(clientConfig)
 	if err != nil {
 		fmt.Println("Error creating client", err)
