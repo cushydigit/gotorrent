@@ -69,27 +69,25 @@ func main() {
 		select {
 		case <-ticker.C:
 			fmt.Print("\033[H\033[2J") // clear screen
-			var name string
-			name = torrent.Name()
-			if len(name) > 30 {
-				name = name[:27] + "..."
-			}
-
-			fmt.Printf("Torrent: %s\n\n", name)
+			fmt.Printf("Torrent: %s\n\n", torrent.Name())
 			files := torrent.Files()
 			var totalCompleted, totalLength int64
 
 			for _, f := range files {
-				completd := f.BytesCompleted()
+				completed := f.BytesCompleted()
 				length := f.Length()
-				totalCompleted += completd
+				totalCompleted += completed
 				totalLength += length
 
-				progress := float64(completd) / float64(length) * 100
+				progress := float64(completed) / float64(length) * 100
 				filled := int(progress / 100 * float64(tSize))
 				bar := fmt.Sprintf("%s%s", strings.Repeat("█", filled), strings.Repeat("░", tSize-filled))
+				displayName := filepath.Base(f.Path())
+				if len(displayName) > 27 {
+					displayName = displayName[:27] + "..."
+				}
 
-				fmt.Printf("%-40s %s %.2f%%\n", filepath.Base(f.Path()), bar, progress)
+				fmt.Printf("%-40s %s %.2f%%\n", displayName, bar, progress)
 			}
 			completed := torrent.BytesCompleted()
 			total := torrent.Info().TotalLength()
