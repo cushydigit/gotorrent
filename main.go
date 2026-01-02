@@ -54,7 +54,7 @@ func main() {
 	signal.Notify(signalChan, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		<-signalChan
-		fmt.Println("Shutting down...")
+		fmt.Println("\nShutting down...")
 		client.Close()
 		os.Exit(0)
 	}()
@@ -67,17 +67,32 @@ func main() {
 	for {
 		select {
 		case <-ticker.C:
+			fmt.Print("\033[H\033[2J") // clear screen
+			fmt.Printf("Torrent: %s\n\n", torrent.Name())
+
+			files := torrent.Files()
+			var totalCompleted, totalLength int64
+
+			for _, f := range files {
+				completd := f.BytesCompleted()
+				length := f.Length()
+				totalCompleted += completd
+				totalLength += length
+
+				progress := float64(completd) / float64(length) * 100
+				filled := int(progress / 100 * float64(tSize))
+				bar := fmt.Sprintf("%s%s", strings.Repeat("█", filled), strings.Repeat("░", tSize-filled))
+
+				fmt.Printf("%-40s %s %.2f%%\n", filepath.Base(f.Path()), bar, progress)
+			}
 			completed := torrent.BytesCompleted()
 			total := torrent.Info().TotalLength()
 
-			// Print download progress
-			progress := float64(completed) / float64(total) * 100
+			totalProgress := float64(totalCompleted) / float64(totalLength) * 100
+			totalFilled := int(totalProgress / 100 * float64(tSize))
+			totalBar := fmt.Sprintf("%s%s", strings.Repeat("█", totalFilled), strings.Repeat("░", tSize-totalFilled))
 
-			// Draw progress bar
-			filled := int(progress / 100 * float64(tSize))
-			bar := fmt.Sprintf("%s%s", strings.Repeat("█", filled), strings.Repeat("░", tSize-filled))
-			fmt.Printf("\r%s %.2f%%", bar, progress)
-			os.Stdout.Sync()
+			fmt.Printf("\nTotal: %-34s %s %.2f%%\n", "", totalBar, totalProgress)
 
 			if completed == total {
 				fmt.Printf("\nDownload completed!\n")
