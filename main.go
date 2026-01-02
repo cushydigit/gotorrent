@@ -69,8 +69,13 @@ func main() {
 		select {
 		case <-ticker.C:
 			fmt.Print("\033[H\033[2J") // clear screen
-			fmt.Printf("Torrent: %s\n\n", torrent.Name())
+			var name string
+			name = torrent.Name()
+			if len(name) > 30 {
+				name = name[:27] + "..."
+			}
 
+			fmt.Printf("Torrent: %s\n\n", name)
 			files := torrent.Files()
 			var totalCompleted, totalLength int64
 
